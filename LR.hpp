@@ -33,6 +33,8 @@ namespace LR {
 
     void fit_vec(std::pair<MatrixXd, VectorXd>);
 
+    void fit_naive(std::pair<MatrixXd, VectorXd>);
+
     VectorXd predict(MatrixXd);
   };
 
