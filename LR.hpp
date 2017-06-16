@@ -31,7 +31,7 @@ namespace LR {
     LogisticRegression(double alpha, int maxIter, double lambda, double epsilon=1e-5)
         : alpha(alpha), maxIter(maxIter), lambda(lambda), epsilon(epsilon) {}
 
-    void fit(std::pair<MatrixXd, VectorXd>);
+    void fit_vec(std::pair<MatrixXd, VectorXd>);
 
     VectorXd predict(MatrixXd);
   };

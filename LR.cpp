@@ -15,7 +15,8 @@ namespace LR {
     return 1.0 / (1.0 + std::exp(-x));
   }
 
-  void LogisticRegression::fit(std::pair<Eigen::MatrixXd, Eigen::VectorXd> train) {
+  // Vectorization
+  void LogisticRegression::fit_vec(std::pair<Eigen::MatrixXd, Eigen::VectorXd> train) {
     m = train.first.rows();
     n = train.first.cols();
 
@@ -23,12 +24,16 @@ namespace LR {
     probas.setZero(m);
 
     for (size_t i = 0; i < maxIter; i++) {
+      // A = x * theta
       VectorXd inner = train.first * theta;
 
+      // E = g(A)
       this->probas = inner.unaryExpr(std::ptr_fun(g));
 
+      // gw = 1/m * xT * (E - y)
       VectorXd gw = 1.0 / this->m * (train.first.transpose() * (this->probas - train.second));
 
+      // theta -= alpha * gw
       this->theta -= this->alpha * gw;
 
       std::cout << gw.norm() << std::endl;
