@@ -27,6 +27,8 @@ namespace LR {
 
     long m;
     long n;
+
+    void regularize(VectorXd &);
   public:
     LogisticRegression(double alpha, int maxIter, double lambda, double epsilon=1e-5)
         : alpha(alpha), maxIter(maxIter), lambda(lambda), epsilon(epsilon) {}

@@ -21,6 +21,11 @@ namespace LR {
     return (test * theta).unaryExpr(std::ptr_fun(g));
   }
 
+  void LogisticRegression::regularize(VectorXd &gw) {
+    gw += this->lambda / this->m * this->theta;
+    gw[0] -= this->lambda / this->m * this->theta(0);
+  }
+
   // Vectorization
   void LogisticRegression::fit_vec(std::pair<Eigen::MatrixXd, Eigen::VectorXd> train) {
     m = train.first.rows();
@@ -38,6 +43,8 @@ namespace LR {
 
       // gw = 1/m * xT * (E - y)
       VectorXd gw = 1.0 / this->m * (train.first.transpose() * (this->probas - train.second));
+
+      regularize(gw);
 
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
@@ -72,6 +79,8 @@ namespace LR {
 
         gw += gwi;
       }
+
+      regularize(gw);
 
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
@@ -132,6 +141,8 @@ namespace LR {
       for (auto &item : sumInCore) {
         gw += item;
       }
+
+      regularize(gw);
 
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
