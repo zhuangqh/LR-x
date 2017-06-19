@@ -23,15 +23,16 @@ namespace LR {
     int maxIter;
 
     VectorXd theta;
-    VectorXd probas;
 
     long m;
     long n;
 
+    bool verbose;
+
     void regularize(VectorXd &);
   public:
-    LogisticRegression(double alpha, int maxIter, double lambda, double epsilon=1e-5)
-        : alpha(alpha), maxIter(maxIter), lambda(lambda), epsilon(epsilon) {}
+    LogisticRegression(double alpha, int maxIter, double lambda, bool verbose=false, double epsilon=1e-5)
+        : alpha(alpha), maxIter(maxIter), lambda(lambda), epsilon(epsilon), verbose(verbose) {}
 
     void fit_vec(std::pair<MatrixXd, VectorXd>);
 

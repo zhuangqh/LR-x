@@ -7,11 +7,28 @@
 //
 
 #include <iostream>
+#include <fstream>
 #include <Eigen/Dense>
+#include <omp.h>
 #include "io.h"
 #include "LR.hpp"
 
 using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
+void timer_wrapper(std::function<void()> func) {
+  double startTime = omp_get_wtime();
+  func();
+  double stopTime = omp_get_wtime();
+
+  std::cout << stopTime - startTime << std::endl;
+}
+
+void save_res(const char *filename, VectorXd &res) {
+  std::ofstream f(filename);
+  f << res;
+  f.close();
+}
 
 int main() {
 
@@ -19,13 +36,29 @@ int main() {
 
   auto train = LR::IO::load_csv("../spamtrain.csv", 2760, 57);
 
-  LR::LogisticRegression lr(1e-5, 10000, 0.2);
+  auto test = LR::IO::load_csv("../spamtest.csv", 1841, 57);
 
-  lr.fit(train);
+  LR::LogisticRegression lr(1e-5, 1000, 0);
 
-//  auto test = LR::IO::load_csv("../spamtest.csv", 1841, 57);
-//
-//  auto predict_tag = lr.predict(test.first);
-//
-//  std::cout << predict_tag << std::endl;
+  VectorXd res;
+
+  timer_wrapper([&]() {
+    lr.fit_naive(train);
+  });
+  res = lr.predict(test.first);
+  save_res("naive.txt", res);
+
+  timer_wrapper([&]() {
+    lr.fit_vec(train);
+  });
+  res = lr.predict(test.first);
+  save_res("vectorization.txt", res);
+
+  timer_wrapper([&]() {
+    lr.fit_parallel(train);
+  });
+  res = lr.predict(test.first);
+  save_res("parallel.txt", res);
+
+  return 0;
 }
