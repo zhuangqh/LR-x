@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <omp.h>
+#include <numeric>
 #include "LR.hpp"
 
 namespace LR {
@@ -32,24 +33,27 @@ namespace LR {
     n = train.first.cols();
 
     theta.setZero(n);
-    probas.setZero(m);
 
     for (size_t i = 0; i < maxIter; i++) {
       // A = x * theta
       VectorXd inner = train.first * theta;
 
       // E = g(A)
-      this->probas = inner.unaryExpr(std::ptr_fun(g));
+      VectorXd ga = inner.unaryExpr(std::ptr_fun(g));
 
       // gw = 1/m * xT * (E - y)
-      VectorXd gw = 1.0 / this->m * (train.first.transpose() * (this->probas - train.second));
+      VectorXd gw = 1.0 / this->m * (train.first.transpose() * (ga - train.second));
 
       regularize(gw);
 
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
 
-      std::cout << gw.norm() << std::endl;
+      // log
+      if (verbose) {
+        std::cout << "gradient " << gw.norm() << std::endl;
+      }
+
       // check for convergence
       if (this->epsilon > gw.norm()) {
         break;
@@ -62,7 +66,6 @@ namespace LR {
     n = train.first.cols();
 
     theta.setZero(n);
-    probas.setZero(m);
 
     for (size_t iter = 0; iter < maxIter; iter++) {
 
@@ -85,7 +88,11 @@ namespace LR {
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
 
-      std::cout << gw.norm() << std::endl;
+      // log
+      if (verbose) {
+        std::cout << "gradient " << gw.norm() << std::endl;
+      }
+
       // check for convergence
       if (this->epsilon > gw.norm()) {
         break;
@@ -99,17 +106,16 @@ namespace LR {
     n = train.first.cols();
 
     theta.setZero(n);
-    probas.setZero(m);
 
     int coreNum = omp_get_num_procs();
 
-    // temp sum in each core
+    // temp sum in each processor
     std::vector<VectorXd> sumInCore(coreNum);
 
-    // iterator in each core
+    // iterator in each processor
     std::vector<size_t> iters(coreNum);
 
-    // iter count for each core
+    // iter count for each processor
     size_t sectionNum = m / coreNum;
 
     for (size_t iter = 0; iter < maxIter; iter++) {
@@ -138,16 +144,19 @@ namespace LR {
 
       }
 
-      for (auto &item : sumInCore) {
-        gw += item;
-      }
+      // merge
+      gw = std::accumulate(sumInCore.begin(), sumInCore.end(), gw);
 
       regularize(gw);
 
       // theta -= alpha * gw
       this->theta -= this->alpha * gw;
 
-      std::cout << gw.norm() << std::endl;
+      // log
+      if (verbose) {
+        std::cout << "gradient " << gw.norm() << std::endl;
+      }
+
       // check for convergence
       if (this->epsilon > gw.norm()) {
         break;
